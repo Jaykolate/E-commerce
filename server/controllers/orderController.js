@@ -1,5 +1,6 @@
 const Order = require("../models/Order");
 const Listing = require("../models/Listing");
+const { createNotification } = require("../services/notificationService");
 const { createPaymentIntent, verifyPayment } = require("../services/paymentService");
 
 // @POST /api/orders/create — initiate order + create stripe payment intent
@@ -58,6 +59,12 @@ const verifyPaymentHandler = async (req, res) => {
         },
         { new: true }
     );
+    await createNotification(
+      order.seller,
+      "new_order",
+     "You have a new order!",
+      `/orders/${order._id}`
+    );
 
     // mark listing as sold
     await Listing.findByIdAndUpdate(order.listing, { status: "sold" });
@@ -76,6 +83,12 @@ const markShipped = async (req, res) => {
 
     order.orderStatus = "shipped";
     await order.save();
+    await createNotification(
+     order.buyer,
+      "order_shipped",
+       "Your order has been shipped!",
+        `/orders/${order._id}`
+    );
 
     res.status(200).json({ message: "Order marked as shipped", order });
 };

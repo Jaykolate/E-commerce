@@ -37,6 +37,9 @@ const aiRoutes = require("./routes/aiRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const swapRoutes = require("./routes/swapRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
@@ -44,6 +47,9 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/swaps", swapRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => res.send("Threadly API is running 🧵"));
 

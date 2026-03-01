@@ -1,5 +1,6 @@
 const Swap = require("../models/Swap");
 const Listing = require("../models/Listing");
+const { createNotification } = require("../services/notificationService");
 
 // @POST /api/swaps — propose a swap
 const proposeSwap = async (req, res) => {
@@ -46,6 +47,13 @@ const proposeSwap = async (req, res) => {
     receiverListing: receiverListingId,
     message,
   });
+
+  await createNotification(
+   receiverListing.seller,
+   "swap_proposed",
+   `Someone wants to swap with your listing!`,
+   `/swaps/${swap._id}`
+   );
 
   await swap.populate([
     { path: "proposerListing", select: "title images price" },
@@ -107,6 +115,12 @@ const respondToSwap = async (req, res) => {
   }
 
   await swap.save();
+  await createNotification(
+    swap.proposer,
+     `swap_${action}ed`,
+      `Your swap proposal was ${action}ed`,
+       `/swaps/${swap._id}`
+    );
 
   await swap.populate([
     { path: "proposerListing", select: "title images price" },
