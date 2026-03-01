@@ -1,35 +1,51 @@
-const dotenv = require("dotenv");
-dotenv.config(); // Must be called first before any other imports that use process.env
-
 const express = require("express");
+const dotenv = require("dotenv");
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
+const http = require("http");
+const { Server } = require("socket.io");
 const connectDB = require("./config/db");
+const { initSocket } = require("./socket/chatHandler");
+
+dotenv.config();
+connectDB();
+
+const app = express();
+const server = http.createServer(app); // wrap express in http server
+
+// socket.io setup
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+initSocket(io); // initialize socket handlers
+
+app.use(helmet());
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(express.json());
+app.use(cookieParser());
+
+// routes
 const authRoutes = require("./routes/authRoutes");
 const listingRoutes = require("./routes/listingRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const swapRoutes = require("./routes/swapRoutes");
-connectDB();
+const chatRoutes = require("./routes/chatRoutes");
 
-const app = express();
-
-app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/swaps", swapRoutes);
+app.use("/api/chat", chatRoutes);
 
-
-app.get("/", (req, res) => {
-  res.send("Threadly API is running 🧵");
-});
+app.get("/", (req, res) => res.send("Threadly API is running 🧵"));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
