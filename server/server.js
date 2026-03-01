@@ -10,6 +10,7 @@ const authRoutes = require("./routes/authRoutes");
 const listingRoutes = require("./routes/listingRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const swapRoutes = require("./routes/swapRoutes");
 connectDB();
 
 const app = express();
@@ -23,6 +24,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/swaps", swapRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Threadly API is running 🧵");
