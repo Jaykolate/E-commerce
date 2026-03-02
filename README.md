@@ -216,13 +216,11 @@ Threadly's swap system allows **item-for-item exchanges**:
 ## 📸 Screenshots
 
 | Home | Explore | Swap Propose |
+<img width="1890" height="871" alt="Screenshot 2026-03-02 202856" src="https://github.com/user-attachments/assets/aa15e03a-f110-4218-b9d1-34b8b287db85" />
+<img width="1897" height="875" alt="Screenshot 2026-03-02 202954" src="https://github.com/user-attachments/assets/5bd4d6f9-3a2b-4e33-8256-74395d08e4bd" />
 <img width="1891" height="874" alt="Screenshot 2026-03-02 203408" src="https://github.com/user-attachments/assets/b0f0a997-e968-452b-8e0a-98c53535045d" />
-|-<img width="1897" height="875" alt="Screenshot 2026-03-02 202954" src="https://github.com/user-attachments/assets/5bd4d6f9-3a2b-4e33-8256-74395d08e4bd" />
---|---|---|
-| <img width="1890" height="871" alt="Screenshot 2026-03-02 202856" src="https://github.com/user-attachments/assets/aa15e03a-f110-4218-b9d1-34b8b287db85" />
-Hero with listing cards | Filter by category | Buyer freeform offer |
 
----
+
 
 ## 📝 License
 
