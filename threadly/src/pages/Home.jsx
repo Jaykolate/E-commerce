@@ -26,7 +26,7 @@ export default function Home() {
   useEffect(() => {
     api.get("/listings?limit=6&status=active")
       .then((res) => setFeatured(res.data.listings))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   return (
@@ -34,38 +34,107 @@ export default function Home() {
 
       {/* ── HERO ── */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-24">
-        <div className="max-w-2xl">
-          <div className="inline-flex items-center gap-2 bg-terracotta-pale text-terracotta-dark text-xs font-semibold tracking-widest uppercase px-4 py-2 rounded-full mb-8">
-            ♻️ Sustainable Fashion Marketplace
+        <div className="flex flex-col lg:flex-row items-center gap-16">
+
+          {/* Left: Text Content */}
+          <div className="flex-1 min-w-0">
+            <div className="inline-flex items-center gap-2 bg-terracotta-pale text-terracotta-dark text-xs font-semibold tracking-widest uppercase px-4 py-2 rounded-full mb-8">
+              ♻️ Sustainable Fashion Marketplace
+            </div>
+            <h1 className="font-serif text-6xl leading-tight text-stone-900 tracking-tight mb-4">
+              Wear it again,<br />
+              <em className="text-terracotta not-italic font-serif italic">wear it well.</em>
+            </h1>
+            <p className="text-stone-500 text-lg font-light leading-relaxed mb-10 max-w-lg">
+              Discover pre-loved fashion from real people. Buy, sell, and swap clothes you'll actually love — at a fraction of the price.
+            </p>
+            <div className="flex items-center gap-4">
+              <Link to="/explore" className="btn-primary text-base px-8 py-4 flex items-center gap-2">
+                Start Exploring <FiArrowRight />
+              </Link>
+              <Link to="/register" className="btn-outline text-base px-8 py-4">
+                Sell Your Clothes
+              </Link>
+            </div>
+            {/* Stats */}
+            <div className="flex items-center gap-10 mt-14 pt-10 border-t border-stone-200">
+              {[
+                { num: "12K+", label: "Active Listings" },
+                { num: "4.8★", label: "Avg Seller Rating" },
+                { num: "2K+", label: "Happy Buyers" },
+              ].map((s) => (
+                <div key={s.label}>
+                  <div className="font-serif text-3xl text-stone-900">{s.num}</div>
+                  <div className="text-xs text-stone-500 mt-1">{s.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <h1 className="font-serif text-6xl leading-tight text-stone-900 tracking-tight mb-4">
-            Wear it again,<br />
-            <em className="text-terracotta not-italic font-serif italic">wear it well.</em>
-          </h1>
-          <p className="text-stone-500 text-lg font-light leading-relaxed mb-10 max-w-lg">
-            Discover pre-loved fashion from real people. Buy, sell, and swap clothes you'll actually love — at a fraction of the price.
-          </p>
-          <div className="flex items-center gap-4">
-            <Link to="/explore" className="btn-primary text-base px-8 py-4 flex items-center gap-2">
-              Start Exploring <FiArrowRight />
-            </Link>
-            <Link to="/register" className="btn-outline text-base px-8 py-4">
-              Sell Your Clothes
-            </Link>
-          </div>
-          {/* Stats */}
-          <div className="flex items-center gap-10 mt-14 pt-10 border-t border-stone-200">
-            {[
-              { num: "12K+", label: "Active Listings" },
-              { num: "4.8★", label: "Avg Seller Rating" },
-              { num: "2K+", label: "Happy Buyers" },
-            ].map((s) => (
-              <div key={s.label}>
-                <div className="font-serif text-3xl text-stone-900">{s.num}</div>
-                <div className="text-xs text-stone-500 mt-1">{s.label}</div>
+
+          {/* Right: Visual Panel */}
+          <div className="hidden lg:flex flex-1 justify-center items-center">
+            <div className="relative w-[420px] h-[480px]">
+
+              {/* Background glow */}
+              <div className="absolute inset-0 bg-terracotta/10 rounded-[40px] blur-3xl scale-110" />
+
+              {/* Card 1 — top left, tilted left */}
+              <div className="absolute top-0 left-0 w-48 bg-white rounded-2xl shadow-lg overflow-hidden -rotate-3 hover:rotate-0 transition-transform duration-300 cursor-pointer">
+                <div className="aspect-[3/4] bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center text-6xl">👗</div>
+                <div className="p-3">
+                  <div className="text-xs text-stone-400 font-medium uppercase tracking-wide mb-0.5">Zara</div>
+                  <div className="text-sm font-medium text-stone-800 truncate">Floral Midi Dress</div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="font-serif text-base text-stone-900">₹850</span>
+                    <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">Like New</span>
+                  </div>
+                </div>
               </div>
-            ))}
+
+              {/* Card 2 — top right, tilted right */}
+              <div className="absolute top-4 right-0 w-44 bg-white rounded-2xl shadow-lg overflow-hidden rotate-3 hover:rotate-0 transition-transform duration-300 cursor-pointer">
+                <div className="aspect-[3/4] bg-gradient-to-br from-amber-50 to-amber-100 flex items-center justify-center text-6xl">🧥</div>
+                <div className="p-3">
+                  <div className="text-xs text-stone-400 font-medium uppercase tracking-wide mb-0.5">H&amp;M</div>
+                  <div className="text-sm font-medium text-stone-800 truncate">Denim Jacket</div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="font-serif text-base text-stone-900">₹1,200</span>
+                    <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full">Good</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3 — bottom center */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-44 bg-white rounded-2xl shadow-lg overflow-hidden hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
+                <div className="aspect-[3/4] bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center text-6xl">👠</div>
+                <div className="p-3">
+                  <div className="text-xs text-stone-400 font-medium uppercase tracking-wide mb-0.5">Steve Madden</div>
+                  <div className="text-sm font-medium text-stone-800 truncate">Block Heels</div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="font-serif text-base text-stone-900">₹650</span>
+                    <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">Like New</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating live badge */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-stone-900 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl flex items-center gap-2 whitespace-nowrap z-10">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                128 new drops today
+              </div>
+
+              {/* Trending tags */}
+              <div className="absolute -bottom-10 left-0 right-0 flex flex-wrap gap-2 justify-center">
+                {["#Vintage", "#Streetwear", "#Y2K", "#Ethnic"].map((tag) => (
+                  <span key={tag} className="bg-white text-stone-600 text-xs font-medium px-3 py-1.5 rounded-full shadow-sm border border-stone-100 hover:border-terracotta hover:text-terracotta transition-colors cursor-pointer">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+            </div>
           </div>
+
         </div>
       </section>
 
