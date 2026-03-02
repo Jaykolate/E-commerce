@@ -6,7 +6,7 @@ const createPaymentIntent = async (amount, currency = "inr") => {
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amount * 100, // stripe needs paise/cents
     currency,
-    payment_method_types: ["card"],
+    automatic_payment_methods: { enabled: true },
   });
   return paymentIntent;
 };
