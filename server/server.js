@@ -11,27 +11,32 @@ const { initSocket } = require("./socket/chatHandler");
 dotenv.config();
 connectDB();
 
+// Strip any accidental trailing slash from CLIENT_URL (breaks CORS origin matching)
+const CLIENT_ORIGIN = (process.env.CLIENT_URL || "").replace(/\/+$/, "");
+
 const app = express();
 const server = http.createServer(app); // wrap express in http server
 
 // socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: CLIENT_ORIGIN,
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
+
 initSocket(io); // initialize socket handlers
 
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: CLIENT_ORIGIN,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
