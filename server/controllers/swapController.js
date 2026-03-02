@@ -4,19 +4,19 @@ const { createNotification } = require("../services/notificationService");
 
 // @POST /api/swaps — propose a swap
 const proposeSwap = async (req, res) => {
-    const { proposerListingId, receiverListingId, message } = req.body;
+    const { proposerListingId, proposerItem, receiverListingId, message } = req.body;
 
-    // validate both listings exist
-    const proposerListing = await Listing.findById(proposerListingId);
-    const receiverListing = await Listing.findById(receiverListingId);
-
-    if (!proposerListing || !receiverListing) {
-        return res.status(404).json({ message: "One or both listings not found" });
+    // Must provide either an existing listing OR a freeform item description
+    if (!proposerListingId && (!proposerItem || !proposerItem.title)) {
+        return res.status(400).json({
+            message: "Please select one of your listings OR describe the item you want to offer",
+        });
     }
 
-    // make sure proposer owns their listing
-    if (proposerListing.seller.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: "You do not own this listing" });
+    // validate receiver listing exists
+    const receiverListing = await Listing.findById(receiverListingId);
+    if (!receiverListing) {
+        return res.status(404).json({ message: "The listing you want to swap for was not found" });
     }
 
     // cant swap with yourself
@@ -24,29 +24,50 @@ const proposeSwap = async (req, res) => {
         return res.status(400).json({ message: "You cannot swap with yourself" });
     }
 
-    // check both listings are active
-    if (proposerListing.status !== "active" || receiverListing.status !== "active") {
-        return res.status(400).json({ message: "One or both listings are not available" });
+    if (receiverListing.status !== "active") {
+        return res.status(400).json({ message: "This listing is no longer available for swap" });
     }
 
-    // check if swap already exists between these listings
-    const existingSwap = await Swap.findOne({
-        proposerListing: proposerListingId,
-        receiverListing: receiverListingId,
-        status: { $in: ["proposed", "countered"] },
-    });
+    let proposerListing = null;
 
-    if (existingSwap) {
-        return res.status(400).json({ message: "A swap request already exists for these items" });
+    if (proposerListingId) {
+        // If proposer has a listing, validate it
+        proposerListing = await Listing.findById(proposerListingId);
+        if (!proposerListing) {
+            return res.status(404).json({ message: "Your listing was not found" });
+        }
+        if (proposerListing.seller.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: "You do not own this listing" });
+        }
+        if (proposerListing.status !== "active") {
+            return res.status(400).json({ message: "Your listing is not active" });
+        }
+
+        // check for duplicate swap between the same listings
+        const existingSwap = await Swap.findOne({
+            proposerListing: proposerListingId,
+            receiverListing: receiverListingId,
+            status: { $in: ["proposed", "countered"] },
+        });
+        if (existingSwap) {
+            return res.status(400).json({ message: "A swap request already exists for these items" });
+        }
     }
 
-    const swap = await Swap.create({
+    const swapData = {
         proposer: req.user._id,
         receiver: receiverListing.seller,
-        proposerListing: proposerListingId,
         receiverListing: receiverListingId,
         message,
-    });
+    };
+
+    if (proposerListingId) {
+        swapData.proposerListing = proposerListingId;
+    } else {
+        swapData.proposerItem = proposerItem; // freeform offer from buyer
+    }
+
+    const swap = await Swap.create(swapData);
 
     await createNotification(
         receiverListing.seller,

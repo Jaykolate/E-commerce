@@ -12,11 +12,19 @@ const swapSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    // item proposer is offering
+    // item proposer is offering — either a listing OR a freeform description
     proposerListing: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Listing",
-      required: true,
+      default: null,           // now optional — buyers may not have listings
+    },
+    // freeform item offer (used when proposer has no listing)
+    proposerItem: {
+      title: { type: String, default: "" },
+      brand: { type: String, default: "" },
+      size: { type: String, default: "" },
+      condition: { type: String, default: "" },
+      description: { type: String, default: "" },
     },
     // item proposer wants
     receiverListing: {

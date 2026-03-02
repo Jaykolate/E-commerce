@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { FiRefreshCw } from "react-icons/fi";
+import { FiRefreshCw, FiPackage } from "react-icons/fi";
 import api from "../services/api";
 import { getMyListings, getListing } from "../services/listingService";
+
+const CONDITIONS = ["New with Tags", "Like New", "Good", "Fair", "Worn"];
 
 export default function SwapPropose() {
     const [searchParams] = useSearchParams();
@@ -19,6 +21,14 @@ export default function SwapPropose() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
+    // Freeform offer form (for buyers with no listings)
+    const [freeItem, setFreeItem] = useState({
+        title: "", brand: "", size: "", condition: "", description: "",
+    });
+
+    const hasFreeItemFilled = freeItem.title.trim().length > 0;
+    const hasListings = myListings.length > 0;
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -31,7 +41,6 @@ export default function SwapPropose() {
                 getMyListings(),
             ]);
             setReceiverListing(receiverRes.listing);
-            // only show active listings
             setMyListings(myRes.listings.filter((l) => l.status === "active"));
         } catch {
             toast.error("Failed to load listings");
@@ -42,16 +51,22 @@ export default function SwapPropose() {
     };
 
     const handleSubmit = async () => {
-        if (!selectedListing) {
-            return toast.error("Please select a listing to offer");
+        if (hasListings && !selectedListing) {
+            return toast.error("Please select one of your listings to offer");
         }
+        if (!hasListings && !hasFreeItemFilled) {
+            return toast.error("Please describe the item you want to offer");
+        }
+
         setSubmitting(true);
         try {
-            await api.post("/swaps", {
-                proposerListingId: selectedListing._id,
-                receiverListingId,
-                message,
-            });
+            const payload = { receiverListingId, message };
+            if (hasListings && selectedListing) {
+                payload.proposerListingId = selectedListing._id;
+            } else {
+                payload.proposerItem = freeItem;
+            }
+            await api.post("/swaps", payload);
             toast.success("Swap proposed! 🔄");
             navigate("/orders");
         } catch (err) {
@@ -83,11 +98,13 @@ export default function SwapPropose() {
                         What will you offer?
                     </h1>
                     <p className="text-stone-500 text-sm">
-                        Select one of your active listings to swap with the item below.
+                        {hasListings
+                            ? "Select one of your active listings to swap with the item below."
+                            : "Describe the item you'd like to offer in exchange."}
                     </p>
                 </div>
 
-                {/* They Want → You Offer */}
+                {/* They have */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
                     <div className="text-xs font-semibold uppercase tracking-wider text-stone-500 mb-4">
                         They have (you want this)
@@ -95,22 +112,14 @@ export default function SwapPropose() {
                     <div className="flex items-center gap-4">
                         <div className="w-20 h-20 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0">
                             {receiverListing?.images?.[0] ? (
-                                <img
-                                    src={receiverListing.images[0].url}
-                                    alt=""
-                                    className="w-full h-full object-cover"
-                                />
+                                <img src={receiverListing.images[0].url} alt="" className="w-full h-full object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-3xl">👗</div>
                             )}
                         </div>
                         <div>
-                            <div className="text-xs font-semibold uppercase tracking-wider text-stone-500 mb-1">
-                                {receiverListing?.brand}
-                            </div>
-                            <div className="font-medium text-stone-900 mb-1">
-                                {receiverListing?.title}
-                            </div>
+                            <div className="text-xs font-semibold uppercase tracking-wider text-stone-500 mb-1">{receiverListing?.brand}</div>
+                            <div className="font-medium text-stone-900 mb-1">{receiverListing?.title}</div>
                             <div className="flex items-center gap-3 text-sm text-stone-500">
                                 <span>Size {receiverListing?.size}</span>
                                 <span className="font-serif text-stone-900">₹{receiverListing?.price}</span>
@@ -119,7 +128,7 @@ export default function SwapPropose() {
                     </div>
                 </div>
 
-                {/* Arrow */}
+                {/* Divider */}
                 <div className="flex items-center justify-center mb-8">
                     <div className="flex items-center gap-3 text-stone-400">
                         <div className="h-px w-24 bg-stone-200" />
@@ -128,56 +137,34 @@ export default function SwapPropose() {
                     </div>
                 </div>
 
-                {/* Select Your Listing */}
+                {/* ── YOUR OFFER ── */}
                 <div className="mb-8">
                     <div className="text-xs font-semibold uppercase tracking-wider text-stone-500 mb-4">
-                        Your offer — select one of your listings
+                        Your offer
                     </div>
 
-                    {myListings.length === 0 ? (
-                        <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-                            <div className="text-4xl mb-3">👗</div>
-                            <h3 className="font-serif text-xl text-stone-900 mb-2">
-                                No active listings
-                            </h3>
-                            <p className="text-stone-500 text-sm mb-5">
-                                You need at least one active listing to propose a swap.
-                            </p>
-                            <button
-                                onClick={() => navigate("/listings/create")}
-                                className="btn-primary"
-                            >
-                                Create a Listing
-                            </button>
-                        </div>
-                    ) : (
+                    {hasListings ? (
+                        /* Listing picker for sellers */
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {myListings.map((listing) => (
                                 <button
                                     key={listing._id}
                                     onClick={() => setSelectedListing(listing)}
-                                    className={`text-left bg-white rounded-2xl p-4 shadow-sm border-2 transition-all hover:shadow-md ${selectedListing?._id === listing._id
-                                            ? "border-terracotta"
-                                            : "border-transparent"
-                                        }`}
+                                    className={`text-left bg-white rounded-2xl p-4 shadow-sm border-2 transition-all hover:shadow-md ${
+                                        selectedListing?._id === listing._id ? "border-terracotta" : "border-transparent"
+                                    }`}
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className="w-16 h-16 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0">
                                             {listing.images?.[0] ? (
-                                                <img
-                                                    src={listing.images[0].url}
-                                                    alt=""
-                                                    className="w-full h-full object-cover"
-                                                />
+                                                <img src={listing.images[0].url} alt="" className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-2xl">👗</div>
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="text-xs text-stone-500 mb-0.5">{listing.brand}</div>
-                                            <div className="text-sm font-medium text-stone-900 truncate">
-                                                {listing.title}
-                                            </div>
+                                            <div className="text-sm font-medium text-stone-900 truncate">{listing.title}</div>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-xs text-stone-500">Size {listing.size}</span>
                                                 <span className="font-serif text-sm text-stone-900">₹{listing.price}</span>
@@ -192,17 +179,100 @@ export default function SwapPropose() {
                                 </button>
                             ))}
                         </div>
+                    ) : (
+                        /* Freeform offer form for buyers with no listings */
+                        <div className="bg-white rounded-2xl p-6 shadow-sm">
+                            <div className="flex items-center gap-2 text-stone-500 text-sm mb-5">
+                                <FiPackage size={16} className="text-terracotta" />
+                                <span>
+                                    You don't have any active listings. Describe the item you'd like to offer instead.
+                                </span>
+                            </div>
+                            <div className="space-y-4">
+                                {/* Title */}
+                                <div>
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-stone-500 block mb-1.5">
+                                        Item Name <span className="text-terracotta">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Blue Denim Jeans"
+                                        value={freeItem.title}
+                                        onChange={(e) => setFreeItem({ ...freeItem, title: e.target.value })}
+                                        className="input"
+                                        maxLength={100}
+                                    />
+                                </div>
+
+                                {/* Brand + Size */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs font-semibold uppercase tracking-wider text-stone-500 block mb-1.5">Brand</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Levi's"
+                                            value={freeItem.brand}
+                                            onChange={(e) => setFreeItem({ ...freeItem, brand: e.target.value })}
+                                            className="input"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold uppercase tracking-wider text-stone-500 block mb-1.5">Size</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. M, L, 32"
+                                            value={freeItem.size}
+                                            onChange={(e) => setFreeItem({ ...freeItem, size: e.target.value })}
+                                            className="input"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Condition */}
+                                <div>
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-stone-500 block mb-1.5">Condition</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {CONDITIONS.map((c) => (
+                                            <button
+                                                key={c}
+                                                type="button"
+                                                onClick={() => setFreeItem({ ...freeItem, condition: c })}
+                                                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                                                    freeItem.condition === c
+                                                        ? "bg-terracotta text-white border-terracotta"
+                                                        : "bg-white text-stone-600 border-stone-200 hover:border-terracotta"
+                                                }`}
+                                            >
+                                                {c}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-stone-500 block mb-1.5">
+                                        Short Description
+                                    </label>
+                                    <textarea
+                                        placeholder="Briefly describe the item's colour, material, any flaws, etc."
+                                        value={freeItem.description}
+                                        onChange={(e) => setFreeItem({ ...freeItem, description: e.target.value })}
+                                        rows={2}
+                                        className="input resize-none"
+                                        maxLength={200}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
 
-                {/* Preview */}
-                {selectedListing && (
+                {/* Swap Preview — for listing-based offers */}
+                {hasListings && selectedListing && (
                     <div className="bg-terracotta-pale rounded-2xl p-5 mb-8">
-                        <div className="text-xs font-semibold uppercase tracking-wider text-terracotta-dark mb-4">
-                            Swap Preview
-                        </div>
+                        <div className="text-xs font-semibold uppercase tracking-wider text-terracotta-dark mb-4">Swap Preview</div>
                         <div className="flex items-center gap-4">
-                            {/* Your item */}
                             <div className="flex-1 text-center">
                                 <div className="w-14 h-14 rounded-xl overflow-hidden bg-white mx-auto mb-2">
                                     {selectedListing.images?.[0] ? (
@@ -211,15 +281,10 @@ export default function SwapPropose() {
                                         <div className="w-full h-full flex items-center justify-center text-xl">👗</div>
                                     )}
                                 </div>
-                                <div className="text-xs font-medium text-stone-900 line-clamp-1">
-                                    {selectedListing.title}
-                                </div>
+                                <div className="text-xs font-medium text-stone-900 line-clamp-1">{selectedListing.title}</div>
                                 <div className="text-xs text-terracotta-dark mt-0.5">Your item</div>
                             </div>
-
                             <FiRefreshCw size={20} className="text-terracotta flex-shrink-0" />
-
-                            {/* Their item */}
                             <div className="flex-1 text-center">
                                 <div className="w-14 h-14 rounded-xl overflow-hidden bg-white mx-auto mb-2">
                                     {receiverListing?.images?.[0] ? (
@@ -228,12 +293,26 @@ export default function SwapPropose() {
                                         <div className="w-full h-full flex items-center justify-center text-xl">👗</div>
                                     )}
                                 </div>
-                                <div className="text-xs font-medium text-stone-900 line-clamp-1">
-                                    {receiverListing?.title}
-                                </div>
+                                <div className="text-xs font-medium text-stone-900 line-clamp-1">{receiverListing?.title}</div>
                                 <div className="text-xs text-terracotta-dark mt-0.5">Their item</div>
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {/* Freeform offer preview */}
+                {!hasListings && hasFreeItemFilled && (
+                    <div className="bg-terracotta-pale rounded-2xl p-5 mb-8">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-terracotta-dark mb-3">Your Offer Summary</div>
+                        <div className="text-sm text-stone-800 font-medium">{freeItem.title}</div>
+                        <div className="flex gap-3 mt-1 text-xs text-stone-500">
+                            {freeItem.brand && <span>{freeItem.brand}</span>}
+                            {freeItem.size && <span>· Size {freeItem.size}</span>}
+                            {freeItem.condition && <span>· {freeItem.condition}</span>}
+                        </div>
+                        {freeItem.description && (
+                            <div className="mt-2 text-xs text-stone-500">{freeItem.description}</div>
+                        )}
                     </div>
                 )}
 
@@ -250,31 +329,21 @@ export default function SwapPropose() {
                         className="input resize-none"
                         maxLength={300}
                     />
-                    <div className="text-xs text-stone-400 text-right mt-1">
-                        {message.length}/300
-                    </div>
+                    <div className="text-xs text-stone-400 text-right mt-1">{message.length}/300</div>
                 </div>
 
                 {/* Submit */}
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="btn-outline flex-1 py-4"
-                    >
-                        Cancel
-                    </button>
+                    <button onClick={() => navigate(-1)} className="btn-outline flex-1 py-4">Cancel</button>
                     <button
                         onClick={handleSubmit}
-                        disabled={submitting || !selectedListing}
+                        disabled={submitting || (hasListings ? !selectedListing : !hasFreeItemFilled)}
                         className="btn-primary flex-1 py-4 flex items-center justify-center gap-2 disabled:opacity-60"
                     >
                         {submitting ? (
                             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
-                            <>
-                                <FiRefreshCw size={16} />
-                                Propose Swap
-                            </>
+                            <><FiRefreshCw size={16} /> Propose Swap</>
                         )}
                     </button>
                 </div>
