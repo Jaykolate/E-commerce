@@ -116,7 +116,9 @@ export default function Login() {
                   Password
                 </label>
                 <span className="text-xs text-terracotta cursor-pointer hover:underline">
-                  Forgot password?
+                  <Link to="/forgot-password" className="text-xs text-terracotta hover:underline">
+                    Forgot password?
+                  </Link>
                 </span>
               </div>
               <div className="relative">
