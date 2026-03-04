@@ -155,6 +155,17 @@ export default function Navbar() {
                                             Favourites
                                         </Link>
 
+                                        {user.role === "admin" && (
+                                            <Link
+                                                to="/admin"
+                                                onClick={() => setProfileOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 hover:text-terracotta transition-colors"
+                                            >
+                                                <FiPackage size={15} />
+                                                Admin Dashboard
+                                            </Link>
+                                        )}
+
                                         <div className="border-t border-stone-100 mt-2 pt-2">
                                             <button
                                                 onClick={handleLogout}
@@ -262,6 +273,18 @@ export default function Navbar() {
                                     </MobileLink>
                                 </>
                             )}
+
+                            {/* mobile menu — before logout */}
+{user?.role === "admin" && (
+  <MobileLink
+    to="/admin"
+    icon={<span>⚙️</span>}
+    onClick={() => setMobileOpen(false)}
+    highlight
+  >
+    Admin Dashboard
+  </MobileLink>
+)}
 
                             <div className="border-t border-stone-100 my-3" />
                             <button

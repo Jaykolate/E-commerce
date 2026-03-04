@@ -17,6 +17,7 @@ import HowItWorks from "./pages/HowItWorks";
 import Checkout from "./pages/Checkout";
 import Wishlist from "./pages/Wishlist";
 import SellerProfile from "./pages/SellerProfile";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   return (
@@ -71,6 +72,13 @@ export default function App() {
           <ProtectedRoute><Checkout /></ProtectedRoute>
         } />
         <Route path="/profile/:id" element={<SellerProfile />} />
+
+        <Route path="/admin" element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+
       </Routes>
     </>
   );
